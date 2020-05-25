@@ -19,7 +19,7 @@ public enum HTTPMethod: String {
 public enum HTTPBody {
     case json(body: Encodable)
     case urlEncoded(body: [String: Any])
-    case image(_ data: Data)
+    case image(data: Data)
 }
 
 public protocol APIRequest {
@@ -69,7 +69,7 @@ public extension APIRequest {
         switch body {
         case .json(let body):
             request.allHTTPHeaderFields?["Content-Type"] = "application/json"
-            request.httpBody = try? JSONSerialization.data(withJSONObject: body, options: .prettyPrinted)
+            request.httpBody = jsonEncodedBody(from: body)
         case .urlEncoded(let body):
             request.allHTTPHeaderFields?["Content-Type"] = "application/x-www-form-urlencoded"
             request.httpBody = urlEncodedBody(from: body)
@@ -82,10 +82,24 @@ public extension APIRequest {
         
         return request
     }
+}
+
+private extension APIRequest {
+    func jsonEncodedBody(from encodable: Encodable) -> Data? {
+        guard let dictionary = encodable.dictionary else { return nil }
+        return try? JSONSerialization.data(withJSONObject: dictionary)
+    }
     
-    private func urlEncodedBody(from dictionary: [String: Any]) -> Data? {
+    func urlEncodedBody(from dictionary: [String: Any]) -> Data? {
         var urlComponents = URLComponents()
         urlComponents.queryItems = dictionary.map {URLQueryItem(name: $0, value: "\($1)")}
         return urlComponents.query?.data(using: .utf8)
+    }
+}
+
+private extension Encodable {
+    var dictionary: [String: Any]? {
+        guard let data = try? JSONEncoder().encode(self) else { return nil }
+        return (try? JSONSerialization.jsonObject(with: data, options: .allowFragments)).flatMap { $0 as? [String: Any] }
     }
 }

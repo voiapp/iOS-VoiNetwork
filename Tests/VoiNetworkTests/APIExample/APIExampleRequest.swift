@@ -17,6 +17,7 @@ public extension APIRequest {
 
 enum APIExampleRequest: APIRequest {
     case exampleRequest
+    case exampleRequestWithBody(body: ExampleBody)
     
     var baseURLPath: String { "" }
     var path: String { "" }
@@ -24,26 +25,23 @@ enum APIExampleRequest: APIRequest {
     var requestHeaders: [String : String]? {
         ["header2": "value2"]
     }
+    
+    var body: HTTPBody? {
+        switch self {
+        case .exampleRequest: return nil
+        case .exampleRequestWithBody(let body): return .json(body: body)
+        }
+    }
 }
 
-public class APIExampleRequestTests: XCTestCase {
-    func testDeviceHeaders() {
-        let request = APIExampleRequest.exampleRequest
-        XCTAssertEqual(request.deviceHeaders!.values.count, 1)
-        XCTAssertEqual(request.deviceHeaders!["header1"], "value1")
+extension APIExampleRequest {
+    struct ExampleBody: Codable {
+        let title: String
+        let value: Int
+        let nested: Nested
         
-        let urlRequest = request.urlRequest!
-        XCTAssertEqual(urlRequest.allHTTPHeaderFields!.values.count, 2)
-        XCTAssertEqual(urlRequest.allHTTPHeaderFields!["header1"], "value1")
-    }
-    
-    func testRequestHeaders() {
-        let request = APIExampleRequest.exampleRequest
-        XCTAssertEqual(request.requestHeaders!.values.count, 1)
-        XCTAssertEqual(request.requestHeaders!["header2"], "value2")
-        
-        let urlRequest = request.urlRequest!
-        XCTAssertEqual(urlRequest.allHTTPHeaderFields!.values.count, 2)
-        XCTAssertEqual(urlRequest.allHTTPHeaderFields!["header2"], "value2")
+        struct Nested: Codable {
+            let condition: Bool
+        }
     }
 }
