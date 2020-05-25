@@ -17,6 +17,9 @@ public protocol APIRequestDispatcherProtocol {
 }
 
 public final class APIRequestDispatcher: APIRequestDispatcherProtocol {
+    public init() {
+    }
+    
     public func execute(apiRequest: APIRequest, completion: @escaping (Data?, URLResponse?, Error?) -> Void) {
         guard let request = apiRequest.urlRequest else {
             completion(nil, nil, APIRequestError.requestMissing)
