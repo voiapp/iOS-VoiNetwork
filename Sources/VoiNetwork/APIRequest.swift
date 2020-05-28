@@ -17,7 +17,8 @@ public enum HTTPMethod: String {
 }
 
 public enum HTTPBody {
-    case json(body: Encodable)
+    case jsonFromEncodable(body: Encodable)
+    case jsonFromDictionary(dictionary: [String: Any])
     case urlEncoded(body: [String: Any])
     case image(data: Data)
 }
@@ -67,9 +68,12 @@ public extension APIRequest {
         }
         
         switch body {
-        case .json(let body):
+        case .jsonFromEncodable(let encodable):
             request.allHTTPHeaderFields?["Content-Type"] = "application/json"
-            request.httpBody = jsonEncodedBody(from: body)
+            request.httpBody = jsonEncodedBody(from: encodable)
+        case .jsonFromDictionary(let dictionary):
+            request.allHTTPHeaderFields?["Content-Type"] = "application/json"
+            request.httpBody = try? JSONSerialization.data(withJSONObject: dictionary)
         case .urlEncoded(let body):
             request.allHTTPHeaderFields?["Content-Type"] = "application/x-www-form-urlencoded"
             request.httpBody = urlEncodedBody(from: body)

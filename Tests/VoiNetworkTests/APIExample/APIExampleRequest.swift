@@ -17,7 +17,8 @@ public extension APIRequest {
 
 enum APIExampleRequest: APIRequest {
     case exampleRequest
-    case exampleRequestWithBody(body: ExampleBody)
+    case exampleRequestWithEncodableBody(body: ExampleBody)
+    case exampleRequestWithDictionaryBody(body: [String: Any])
     
     var baseURLPath: String { "" }
     var path: String { "" }
@@ -29,7 +30,8 @@ enum APIExampleRequest: APIRequest {
     var body: HTTPBody? {
         switch self {
         case .exampleRequest: return nil
-        case .exampleRequestWithBody(let body): return .json(body: body)
+        case .exampleRequestWithEncodableBody(let encodable): return .jsonFromEncodable(body: encodable)
+        case .exampleRequestWithDictionaryBody(let dictionary): return .jsonFromDictionary(dictionary: dictionary)
         }
     }
 }
