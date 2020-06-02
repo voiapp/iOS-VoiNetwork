@@ -32,7 +32,7 @@ public protocol APIRequest {
     //Optional
     var queryParameters: [String: String]? { get }
     var body: HTTPBody? { get }
-    var deviceHeaders: [String: String]? { get }
+    var deviceHeaders: [String: String] { get }
     var requestHeaders: [String: String]? { get }
     var cachingPolicy: URLRequest.CachePolicy { get }
     
@@ -41,7 +41,6 @@ public protocol APIRequest {
 }
 
 public extension APIRequest {
-    var deviceHeaders: [String: String]? { return nil }
     var requestHeaders: [String: String]? { return nil }
     var queryParameters: [String: String]? { return nil }
     var body: HTTPBody? { return nil }

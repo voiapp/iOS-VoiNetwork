@@ -12,8 +12,8 @@ import VoiNetwork
 public class APIExampleRequestTests: XCTestCase {
     func testDeviceHeaders() {
         let request = APIExampleRequest.exampleRequest
-        XCTAssertEqual(request.deviceHeaders!.values.count, 1)
-        XCTAssertEqual(request.deviceHeaders!["header1"], "value1")
+        XCTAssertEqual(request.deviceHeaders.values.count, 1)
+        XCTAssertEqual(request.deviceHeaders["header1"], "value1")
         
         let urlRequest = request.urlRequest!
         XCTAssertEqual(urlRequest.allHTTPHeaderFields!.values.count, 2)

@@ -10,7 +10,7 @@ import XCTest
 import VoiNetwork
 
 public extension APIRequest {
-    var deviceHeaders: [String : String]? {
+    var deviceHeaders: [String : String] {
         ["header1": "value1"]
     }
 }
