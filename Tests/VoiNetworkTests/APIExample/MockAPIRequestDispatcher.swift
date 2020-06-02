@@ -10,6 +10,8 @@ import Foundation
 import VoiNetwork
 
 class MockAPIRequestDispatcher: APIRequestDispatcherProtocol {
+    var deviceHeaderProvider: DeviceHeaderProvider { fatalError() }
+    
     var data: Data?
     var statusCode: Int
     var error: Error?

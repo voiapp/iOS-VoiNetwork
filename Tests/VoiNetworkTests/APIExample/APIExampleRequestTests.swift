@@ -10,23 +10,13 @@ import XCTest
 import VoiNetwork
 
 public class APIExampleRequestTests: XCTestCase {
-    func testDeviceHeaders() {
-        let request = APIExampleRequest.exampleRequest
-        XCTAssertEqual(request.deviceHeaders.values.count, 1)
-        XCTAssertEqual(request.deviceHeaders["header1"], "value1")
-        
-        let urlRequest = request.urlRequest!
-        XCTAssertEqual(urlRequest.allHTTPHeaderFields!.values.count, 2)
-        XCTAssertEqual(urlRequest.allHTTPHeaderFields!["header1"], "value1")
-    }
-    
     func testRequestHeaders() {
         let request = APIExampleRequest.exampleRequest
         XCTAssertEqual(request.requestHeaders!.values.count, 1)
         XCTAssertEqual(request.requestHeaders!["header2"], "value2")
         
         let urlRequest = request.urlRequest!
-        XCTAssertEqual(urlRequest.allHTTPHeaderFields!.values.count, 2)
+        XCTAssertEqual(urlRequest.allHTTPHeaderFields!.values.count, 1)
         XCTAssertEqual(urlRequest.allHTTPHeaderFields!["header2"], "value2")
     }
     

@@ -9,12 +9,6 @@
 import XCTest
 import VoiNetwork
 
-public extension APIRequest {
-    var deviceHeaders: [String : String] {
-        ["header1": "value1"]
-    }
-}
-
 enum APIExampleRequest: APIRequest {
     case exampleRequest
     case exampleRequestWithEncodableBody(body: ExampleBody)

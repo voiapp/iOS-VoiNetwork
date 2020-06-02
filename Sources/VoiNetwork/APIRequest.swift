@@ -32,7 +32,6 @@ public protocol APIRequest {
     //Optional
     var queryParameters: [String: String]? { get }
     var body: HTTPBody? { get }
-    var deviceHeaders: [String: String] { get }
     var requestHeaders: [String: String]? { get }
     var cachingPolicy: URLRequest.CachePolicy { get }
     
@@ -61,7 +60,6 @@ public extension APIRequest {
         var request = URLRequest(url: url)
         request.httpMethod = method.rawValue.capitalized
         request.cachePolicy = cachingPolicy
-        request.allHTTPHeaderFields = deviceHeaders
         requestHeaders?.forEach { (key: String, value: String) in
             request.addValue(value, forHTTPHeaderField: key)
         }
