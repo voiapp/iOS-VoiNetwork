@@ -58,7 +58,7 @@ public extension APIRequest {
         guard let url = urlComponents.url else { return nil }
         
         var request = URLRequest(url: url)
-        request.httpMethod = method.rawValue.capitalized
+        request.httpMethod = method.rawValue.uppercased()
         request.cachePolicy = cachingPolicy
         requestHeaders?.forEach { (key: String, value: String) in
             request.addValue(value, forHTTPHeaderField: key)
