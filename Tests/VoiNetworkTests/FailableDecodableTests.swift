@@ -13,20 +13,31 @@ final class ApiTestService {}
 extension ApiTestService {
     struct TestEndpoint {
         struct ResponseBody: Decodable {
-            private let data: [FailableDecodable<TestItem>]
+            private let failableData: [FailableDecodable<TestItem>]
             
-            var validData: [TestItem] {
-                return data.compactMap { $0.base }
+            var data: [TestItem] {
+                return failableData.compactMap { $0.base }
+            }
+            
+            enum CodingKeys: String, CodingKey {
+                case failableData = "data"
             }
             
             struct TestItem: Decodable {
                 let id: String
                 let name: String
                 let discount: Double?
-                private let tags: [FailableDecodable<String>]?
+                private let failableTags: [FailableDecodable<String>]?
                 
-                var validTags: [String]? {
-                    return tags?.compactMap { $0.base }
+                enum CodingKeys: String, CodingKey {
+                    case id
+                    case name
+                    case discount
+                    case failableTags = "tags"
+                }
+                
+                var tags: [String]? {
+                    return failableTags?.compactMap { $0.base }
                 }
             }
         }
@@ -88,11 +99,11 @@ class FailableDecodableTests: XCTestCase {
         //If decoding fails, the test function will throw and test will fail.
         let responseBody: ApiTestService.TestEndpoint.ResponseBody = try JSONDecoder().decode(ApiTestService.TestEndpoint.ResponseBody.self, from: testData)
         
-        XCTAssertEqual(responseBody.validData.count, 4) // 4 valid `TestItems` are received
-        XCTAssertEqual(responseBody.validData[0].validTags!.count, 3) // First test item contains all 3 valid tags
-        XCTAssertEqual(responseBody.validData[1].validTags!.count, 2) // Second test item contains 2 valid tags, the 2 invalid tags are filtered
-        XCTAssertEqual(responseBody.validData[2].validTags!.count, 0) // Third test item contains 0 valid tags, the 2 invalid tags are filtered
-        XCTAssertNil(responseBody.validData[3].validTags) // Fourth test item has Optional<Nil> valid tags
+        XCTAssertEqual(responseBody.data.count, 4) // 4 valid `TestItems` are received
+        XCTAssertEqual(responseBody.data[0].tags!.count, 3) // First test item contains all 3 valid tags
+        XCTAssertEqual(responseBody.data[1].tags!.count, 2) // Second test item contains 2 valid tags, the 2 invalid tags are filtered
+        XCTAssertEqual(responseBody.data[2].tags!.count, 0) // Third test item contains 0 valid tags, the 2 invalid tags are filtered
+        XCTAssertNil(responseBody.data[3].tags) // Fourth test item has Optional<Nil> valid tags
     }
 
 }
