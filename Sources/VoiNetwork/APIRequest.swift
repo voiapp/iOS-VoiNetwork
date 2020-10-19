@@ -6,7 +6,7 @@
 //  Copyright © 2019 Voi Technology. All rights reserved.
 //
 
-import UIKit
+import Foundation
 
 public enum HTTPMethod: String {
     case get
