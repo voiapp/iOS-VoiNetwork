@@ -20,16 +20,15 @@ struct APIExampleService: APIExampleServiceProtocol {
     
     func requestWithoutErrorHandling(completion: @escaping (Result<ExampleSuccess, Error>) -> Void) {
         let request = APIExampleRequest.exampleRequest
-        performRequest(request) { result in
-            result.parseToType(ExampleSuccess.self, statusCode: .ok, completion: completion)
+        performRequestWithParsing(request) { result in
+            result.convertToType(completion: completion)
         }
     }
     
     func requestWithErrorHandling(completion: @escaping (Result<ExampleSuccess, Error>) -> Void) {
         let request = APIExampleRequest.exampleRequest
-        performRequest(request) { result in
-            result.parseToType(success: (type: ExampleSuccess.self, statusCode: .ok),
-                               error: (type: ExampleError.self, statusCode: .badRequest), completion: completion)
+        performRequestWithParsing(request) { result in
+            result.convertToType(completion: completion)
         }
     }
     

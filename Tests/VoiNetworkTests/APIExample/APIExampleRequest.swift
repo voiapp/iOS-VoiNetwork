@@ -28,6 +28,34 @@ enum APIExampleRequest: APIRequest {
         case .exampleRequestWithDictionaryBody(let dictionary): return .jsonFromDictionary(dictionary: dictionary)
         }
     }
+    
+    var parsersMap: [HTTPStatusCode : AnyParser] {
+        get {
+            return [.ok : AnyParser(parser: APIExampleParser()),
+                    .badRequest: AnyParser(parser: APIExampleErrorParser()),
+                    .noContent: AnyParser(parser: APIExampleErrorParser())]
+        }
+    }
+}
+
+final class APIExampleParser: APIParser {
+    typealias Response = ExampleSuccess
+    typealias CustomError = ExampleError
+    var isSuccess: Bool {
+        get {
+            return true
+        }
+    }
+}
+
+final class APIExampleErrorParser: APIParser {
+    typealias Response = ExampleSuccess
+    typealias CustomError = ExampleError
+    var isSuccess: Bool {
+        get {
+            return false
+        }
+    }
 }
 
 extension APIExampleRequest {

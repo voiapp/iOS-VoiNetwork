@@ -84,7 +84,7 @@ class APIExampleServiceTests_WithErrorHandling: XCTestCase {
         dispatcher.statusCode = 204
         service.requestWithErrorHandling { result in
             if case .failure(let error) = result, let serviceError = error as? APIServiceError {
-                XCTAssertEqual(serviceError, APIServiceError.statusCodeNotHandled)
+                XCTAssertEqual(serviceError, APIServiceError.couldNotParseToSpecifiedModel)
             } else {
                 XCTFail()
             }
