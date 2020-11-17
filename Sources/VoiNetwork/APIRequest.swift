@@ -24,6 +24,7 @@ public enum HTTPBody {
 }
 
 public protocol APIRequest {
+    
     // Required
     var baseURLPath: String { get }
     var path: String { get }
@@ -34,7 +35,7 @@ public protocol APIRequest {
     var body: HTTPBody? { get }
     var requestHeaders: [String: String]? { get }
     var cachingPolicy: URLRequest.CachePolicy { get }
-    
+    var parsersMap: [HTTPStatusCode : AnyParser] { get }
     //Computing URLRequest from above parameters
     var urlRequest: URLRequest? { get }
 }
@@ -42,6 +43,7 @@ public protocol APIRequest {
 public extension APIRequest {
     var requestHeaders: [String: String]? { return nil }
     var queryParameters: [String: String]? { return nil }
+    var parsersMap: [HTTPStatusCode : AnyParser] { return [HTTPStatusCode : AnyParser]() }
     var body: HTTPBody? { return nil }
     var cachingPolicy: URLRequest.CachePolicy { return .reloadIgnoringLocalAndRemoteCacheData }
     

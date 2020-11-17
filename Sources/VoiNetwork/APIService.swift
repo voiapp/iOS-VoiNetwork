@@ -12,6 +12,7 @@ public enum APIServiceError: Error {
     case invalidHTTPURLResponse
     case statusCodeNotHandled
     case couldNotParseToSpecifiedModel
+    case noneParsingVariantsProvided
 }
 
 public typealias APIServiceSuccessType = (statusCode: HTTPStatusCode, data: Data?)
@@ -19,10 +20,30 @@ public typealias APIServiceSuccessType = (statusCode: HTTPStatusCode, data: Data
 public protocol APIServiceProtocol {
     var dispatcher: APIRequestDispatcherProtocol { get }
     
+    func performRequestWithParsing(_ apiRequest: APIRequest, _ completion: @escaping (Result<Decodable?, Error>) -> Void)
     func performRequest(_ apiRequest: APIRequest, _ completion: @escaping (Result<APIServiceSuccessType, Error>) -> Void)
 }
 
 public extension APIServiceProtocol {
+    func performRequestWithParsing(_ apiRequest: APIRequest, _ completion: @escaping (Result<Decodable?, Error>) -> Void) {
+        NetworkActivity.start()
+        self.dispatcher.execute(apiRequest: apiRequest, completion: {(data, response, error) in
+            NetworkActivity.stop()
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+            
+            guard let httpResponse = response as? HTTPURLResponse, let statusCode = httpResponse.httpStatusCode else {
+                completion(.failure(APIServiceError.invalidHTTPURLResponse))
+                return
+            }
+            if let parser = apiRequest.parsersMap[statusCode] {
+                completion(parser.parseData(data))
+            }
+        })
+    }
+    
     func performRequest(_ apiRequest: APIRequest, _ completion: @escaping (Result<APIServiceSuccessType, Error>) -> Void) {
         NetworkActivity.start()
         self.dispatcher.execute(apiRequest: apiRequest, completion: {(data, response, error) in
@@ -38,6 +59,19 @@ public extension APIServiceProtocol {
             }
             completion(.success((statusCode, data)))
         })
+    }
+}
+public extension Result {
+    func convertToType<SuccessType: Decodable>(completion: @escaping (Result<SuccessType, Error>) -> Void) {
+        switch self {
+        case .success(let object):
+            if let response = object as? SuccessType {
+                completion(.success(response))
+            } else {
+                completion(.failure(APIServiceError.couldNotParseToSpecifiedModel))
+            }
+        case .failure(let error): completion(.failure(error))
+        }
     }
 }
 
