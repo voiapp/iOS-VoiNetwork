@@ -20,6 +20,7 @@ public protocol APIServiceProtocol {
     var dispatcher: APIRequestDispatcherProtocol { get }
     
     func performRequest(_ apiRequest: APIRequest, _ completion: @escaping (Result<APIServiceSuccessType, Error>) -> Void)
+    func performRequest<Response: Decodable, CustomError: Error & Decodable>(_ apiRequest: APIRequest, _ errorType: CustomError.Type, _ completion: @escaping (Result<Response, Error>) -> Void)
 }
 
 public extension APIServiceProtocol {
@@ -38,6 +39,55 @@ public extension APIServiceProtocol {
             }
             completion(.success((statusCode, data)))
         })
+    }
+    
+    func performRequest<Response: Decodable, CustomError: Error & Decodable>(_ apiRequest: APIRequest, _ errorType: CustomError.Type, _ completion: @escaping (Result<Response, Error>) -> Void) {
+        NetworkActivity.start()
+        self.dispatcher.execute(apiRequest: apiRequest, completion: {(data, response, error) in
+            NetworkActivity.stop()
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+
+            guard let httpResponse = response as? HTTPURLResponse, let statusCode = httpResponse.httpStatusCode else {
+                completion(.failure(APIServiceError.statusCodeNotHandled))
+                return
+            }
+            
+            do {
+                if apiRequest.successCode == statusCode {
+                    if let responseData = data {
+                        let responseObject: Response = try parse(responseData)
+                        completion(.success(responseObject))
+                    } else {
+                        completion(.failure(APIServiceError.invalidHTTPURLResponse))
+                    }
+                } else {
+                    if let responseData = data {
+                        let errorObject: CustomError = try parse(responseData)
+                        completion(.failure(errorObject))
+                    } else {
+                        completion(.failure(APIServiceError.invalidHTTPURLResponse))
+                    }
+                }
+            } catch (let error) {
+                completion(.failure(error))
+            }
+        })
+    }
+}
+
+extension APIServiceProtocol {
+    func parse<T: Decodable>(_ data: Data, jsonDecoder: JSONDecoder = JSONDecoder()) throws -> T  {
+        if T.self is String.Type {
+            if let parsed = String(data: data, encoding: .utf8) as? T {
+                return parsed
+            } else {
+                throw APIServiceError.couldNotParseToSpecifiedModel
+            }
+        }
+        return try jsonDecoder.decode(T.self, from: data)
     }
 }
 
