@@ -37,8 +37,13 @@ class APIExampleServiceTests_WithErrorHandling: XCTestCase {
         let expectation = XCTestExpectation()
         dispatcher.data = responseModel_inValid.data(using: .utf8)
         service.requestWithErrorHandling { result in
-            if case .failure(let error) = result, let serviceError = error as? APIServiceError {
-                XCTAssertEqual(serviceError, APIServiceError.couldNotParseToSpecifiedModel)
+            if case .failure(let error) = result, let decodingEror = error as? DecodingError {
+                switch decodingEror {
+                case .keyNotFound(let key, _):
+                    XCTAssertEqual(key.stringValue, "name")
+                default:
+                    XCTFail()
+                }
             } else {
                 XCTFail()
             }
@@ -68,8 +73,13 @@ class APIExampleServiceTests_WithErrorHandling: XCTestCase {
         dispatcher.data = responseError_inValid.data(using: .utf8)
         dispatcher.statusCode = 400
         service.requestWithErrorHandling { result in
-            if case .failure(let error) = result, let serviceError = error as? APIServiceError {
-                XCTAssertEqual(serviceError, APIServiceError.couldNotParseToSpecifiedModel)
+            if case .failure(let error) = result, let decodingEror = error as? DecodingError {
+                switch decodingEror {
+                case .keyNotFound(let key, _):
+                    XCTAssertEqual(key.stringValue, "errorMessage")
+                default:
+                    XCTFail()
+                }
             } else {
                 XCTFail()
             }
@@ -83,8 +93,13 @@ class APIExampleServiceTests_WithErrorHandling: XCTestCase {
         dispatcher.data = responseError_inValid.data(using: .utf8)
         dispatcher.statusCode = 204
         service.requestWithErrorHandling { result in
-            if case .failure(let error) = result, let serviceError = error as? APIServiceError {
-                XCTAssertEqual(serviceError, APIServiceError.statusCodeNotHandled)
+            if case .failure(let error) = result, let decodingEror = error as? DecodingError {
+                switch decodingEror {
+                case .keyNotFound(let key, _):
+                    XCTAssertEqual(key.stringValue, "errorMessage")
+                default:
+                    XCTFail()
+                }
             } else {
                 XCTFail()
             }

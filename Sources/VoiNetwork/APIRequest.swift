@@ -34,6 +34,7 @@ public protocol APIRequest {
     var body: HTTPBody? { get }
     var requestHeaders: [String: String]? { get }
     var cachingPolicy: URLRequest.CachePolicy { get }
+    var successCode: HTTPStatusCode { get }
     
     //Computing URLRequest from above parameters
     var urlRequest: URLRequest? { get }
@@ -44,7 +45,8 @@ public extension APIRequest {
     var queryParameters: [String: String]? { return nil }
     var body: HTTPBody? { return nil }
     var cachingPolicy: URLRequest.CachePolicy { return .reloadIgnoringLocalAndRemoteCacheData }
-    
+    var successCode: HTTPStatusCode { return .ok }
+
     var urlRequest: URLRequest? {
         guard var urlComponents = URLComponents(string: baseURLPath + path) else { return nil }
         
