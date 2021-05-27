@@ -14,23 +14,23 @@ public final class NetworkActivity {
     
     public static func start() {
         activities += 1
-        reloadIndicatorStatus()
+        //reloadIndicatorStatus()
     }
     
     public static func stop() {
         if activities > 0 {
             activities -= 1
         }
-        reloadIndicatorStatus()
+        //reloadIndicatorStatus()
     }
     
-    private static func reloadIndicatorStatus() {
-        if Thread.isMainThread {
-            UIApplication.shared.isNetworkActivityIndicatorVisible = activities != 0
-        } else {
-            DispatchQueue.main.async {
-                UIApplication.shared.isNetworkActivityIndicatorVisible = activities != 0
-            }
-        }
-    }
+//    private static func reloadIndicatorStatus() {
+//        if Thread.isMainThread {
+//            UIApplication.shared.isNetworkActivityIndicatorVisible = activities != 0
+//        } else {
+//            DispatchQueue.main.async {
+//                UIApplication.shared.isNetworkActivityIndicatorVisible = activities != 0
+//            }
+//        }
+//    }
 }
