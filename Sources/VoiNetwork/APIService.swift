@@ -25,9 +25,7 @@ public protocol APIServiceProtocol {
 
 public extension APIServiceProtocol {
     func performRequest(_ apiRequest: APIRequest, _ completion: @escaping (Result<APIServiceSuccessType, Error>) -> Void) {
-        NetworkActivity.start()
         self.dispatcher.execute(apiRequest: apiRequest, completion: {(data, response, error) in
-            NetworkActivity.stop()
             if let error = error {
                 completion(.failure(error))
                 return
@@ -42,9 +40,7 @@ public extension APIServiceProtocol {
     }
     
     func performRequest<Response: Decodable, CustomError: Error & Decodable>(_ apiRequest: APIRequest, _ errorType: CustomError.Type, _ completion: @escaping (Result<Response, Error>) -> Void) {
-        NetworkActivity.start()
         self.dispatcher.execute(apiRequest: apiRequest, completion: {(data, response, error) in
-            NetworkActivity.stop()
             if let error = error {
                 completion(.failure(error))
                 return
