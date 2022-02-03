@@ -14,6 +14,7 @@ public enum APIServiceError: Error {
     //TODO: Deprecate in favour of `parsingFailed(Error)`
     case couldNotParseToSpecifiedModel
     case parsingFailed(Error)
+    case statusCodeNotMatching
 }
 
 public typealias APIServiceSuccessType = (statusCode: HTTPStatusCode, data: Data?)
