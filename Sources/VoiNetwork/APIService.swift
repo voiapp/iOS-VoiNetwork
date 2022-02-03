@@ -23,7 +23,10 @@ public protocol APIServiceProtocol {
     var dispatcher: APIRequestDispatcherProtocol { get }
     
     func performRequest(_ apiRequest: APIRequest, _ completion: @escaping (Result<APIServiceSuccessType, Error>) -> Void)
+    // I don't find any usages of this. Should we get rid of it?
     func performRequest<Response: Decodable, CustomError: Error & Decodable>(_ apiRequest: APIRequest, _ errorType: CustomError.Type, _ completion: @escaping (Result<Response, Error>) -> Void)
+    
+    func performRequest(_ apiRequest: APIRequest) async throws -> ApiSuccess
 }
 
 public extension APIServiceProtocol {
@@ -112,6 +115,7 @@ public extension Result where Success == APIServiceSuccessType {
         }
     }
     
+    //TODO: Why do we need completion here? Nothing aynchronous in it 🤔
     func parseToType<Type: Decodable>(_ type: Type.Type, statusCode: HTTPStatusCode, jsonDecoder: JSONDecoder = JSONDecoder(), completion: @escaping (Result<Type, Error>) -> Void) {
         if case Result.failure(let error) = self {
             completion(.failure(error))
