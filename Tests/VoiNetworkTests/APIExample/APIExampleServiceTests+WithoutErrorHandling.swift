@@ -38,11 +38,11 @@ class APIExampleServiceTests_WithoutErrorHandling: XCTestCase {
         let expectation = XCTestExpectation()
         dispatcher.data = responseModel_inValid.data(using: .utf8)
         service.requestWithoutErrorHandling { result in
-            if case .failure(let error) = result, let serviceError = error as? APIServiceError {
-                XCTAssertEqual(serviceError, APIServiceError.couldNotParseToSpecifiedModel)
-            } else {
-                XCTFail()
-            }
+            guard case .failure(let error) = result,
+                  let serviceError = error as? APIServiceError,
+                  case APIServiceError.couldNotParseToSpecifiedModel = serviceError else {
+                      return XCTFail()
+                  }
             expectation.fulfill()
         }
         wait(for: [expectation], timeout: 1)
@@ -53,11 +53,11 @@ class APIExampleServiceTests_WithoutErrorHandling: XCTestCase {
         dispatcher.data = responseModel_valid.data(using: .utf8)
         dispatcher.statusCode = 400
         service.requestWithoutErrorHandling { result in
-            if case .failure(let error) = result, let serviceError = error as? APIServiceError {
-                XCTAssertEqual(serviceError, APIServiceError.statusCodeNotHandled)
-            } else {
-                XCTFail()
-            }
+            guard case .failure(let error) = result,
+                  let serviceError = error as? APIServiceError,
+                  case APIServiceError.statusCodeNotHandled = serviceError else {
+                      return XCTFail()
+                  }
             expectation.fulfill()
         }
         wait(for: [expectation], timeout: 1)

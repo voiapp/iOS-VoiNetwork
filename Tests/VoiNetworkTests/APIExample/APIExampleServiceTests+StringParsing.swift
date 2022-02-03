@@ -37,11 +37,11 @@ class APIExampleServiceTests_StringParsing: XCTestCase {
     func testExampleRequest_ParseString_Fail() {
         let expectation = XCTestExpectation()
         service.requestWithStringResponse { result in
-            if case .failure(let error) = result, let serviceError = error as? APIServiceError {
-                XCTAssertEqual(serviceError, APIServiceError.couldNotParseToSpecifiedModel)
-            } else {
-                XCTFail()
-            }
+            guard case .failure(let error) = result,
+                  let serviceError = error as? APIServiceError,
+                  case APIServiceError.couldNotParseToSpecifiedModel = serviceError else {
+                      return XCTFail()
+                  }
             expectation.fulfill()
         }
         wait(for: [expectation], timeout: 1)

@@ -11,7 +11,9 @@ import Foundation
 public enum APIServiceError: Error {
     case invalidHTTPURLResponse
     case statusCodeNotHandled
+    //TODO: Deprecate in favour of `parsingFailed(Error)`
     case couldNotParseToSpecifiedModel
+    case parsingFailed(Error)
 }
 
 public typealias APIServiceSuccessType = (statusCode: HTTPStatusCode, data: Data?)
