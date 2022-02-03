@@ -28,4 +28,14 @@ class MockAPIRequestDispatcher: APIRequestDispatcherProtocol {
         let response = HTTPURLResponse(url: apiRequest.urlRequest!.url!, statusCode: statusCode, httpVersion: nil, headerFields: nil)
         completion(data, response, error)
     }
+    
+    func execute(apiRequest: APIRequest) async throws -> (Data, URLResponse) {
+        numberOfTimesExecuteIsCalled += 1
+        let response = HTTPURLResponse(url: apiRequest.urlRequest!.url!, statusCode: statusCode, httpVersion: nil, headerFields: nil)
+        return try URLSession.DataTaskCompletionTupleRepresentation(
+            data: data,
+            response: response,
+            error: error
+        ).getDataAndResponse()
+    }
 }
