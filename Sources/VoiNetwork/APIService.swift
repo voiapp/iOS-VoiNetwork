@@ -17,8 +17,8 @@ public enum APIServiceError: Error {
 
 public typealias APIServiceSuccessType = (statusCode: HTTPStatusCode, data: Data?)
 public struct APIServiceResponse {
-    let statusCode: HTTPStatusCode
-    let data: Data?
+    public let statusCode: HTTPStatusCode
+    public let data: Data?
 }
 
 public protocol APIServiceProtocol {
