@@ -12,22 +12,53 @@ public enum APIServiceError: Error {
     case invalidHTTPURLResponse
     case statusCodeNotHandled
     case couldNotParseToSpecifiedModel
+    case dataMissingFromResponse
 }
 
 public typealias APIServiceSuccessType = (statusCode: HTTPStatusCode, data: Data?)
+public struct APIServiceResponse {
+    let statusCode: HTTPStatusCode
+    let data: Data?
+}
 
 public protocol APIServiceProtocol {
     var dispatcher: APIRequestDispatcherProtocol { get }
-    
+
+    func performRequest(_ apiRequest: APIRequest) async throws -> APIServiceResponse
+
+    @available(*, deprecated, message: "Please use the async version")
     func performRequest(_ apiRequest: APIRequest, _ completion: @escaping (Result<APIServiceSuccessType, Error>) -> Void)
-    func performRequest<Response: Decodable, CustomError: Error & Decodable>(_ apiRequest: APIRequest, _ errorType: CustomError.Type, _ completion: @escaping (Result<Response, Error>) -> Void)
 }
 
 public extension APIServiceProtocol {
+    func performRequest(_ apiRequest: APIRequest) async throws -> APIServiceResponse {
+        let response = try await dispatcher.execute(apiRequest: apiRequest)
+        guard let httpResponse = response.1 as? HTTPURLResponse, let statusCode = httpResponse.httpStatusCode else {
+            throw APIServiceError.invalidHTTPURLResponse
+        }
+
+        return APIServiceResponse(statusCode: statusCode, data: response.0)
+    }
+}
+
+public extension APIServiceResponse {
+    func parse<T: Decodable>(jsonDecoder: JSONDecoder = JSONDecoder()) throws -> T {
+        guard let data = data else {
+            throw APIServiceError.dataMissingFromResponse
+        }
+
+        if T.self is String.Type, let parsed = String(data: data, encoding: .utf8) as? T {
+            return parsed
+        }
+        return try jsonDecoder.decode(T.self, from: data)
+    }
+}
+
+//Mark: Code below is from old API with completion handlers
+
+public extension APIServiceProtocol {
     func performRequest(_ apiRequest: APIRequest, _ completion: @escaping (Result<APIServiceSuccessType, Error>) -> Void) {
-        NetworkActivity.start()
         self.dispatcher.execute(apiRequest: apiRequest, completion: {(data, response, error) in
-            NetworkActivity.stop()
             if let error = error {
                 completion(.failure(error))
                 return
@@ -39,55 +70,6 @@ public extension APIServiceProtocol {
             }
             completion(.success((statusCode, data)))
         })
-    }
-    
-    func performRequest<Response: Decodable, CustomError: Error & Decodable>(_ apiRequest: APIRequest, _ errorType: CustomError.Type, _ completion: @escaping (Result<Response, Error>) -> Void) {
-        NetworkActivity.start()
-        self.dispatcher.execute(apiRequest: apiRequest, completion: {(data, response, error) in
-            NetworkActivity.stop()
-            if let error = error {
-                completion(.failure(error))
-                return
-            }
-
-            guard let httpResponse = response as? HTTPURLResponse, let statusCode = httpResponse.httpStatusCode else {
-                completion(.failure(APIServiceError.statusCodeNotHandled))
-                return
-            }
-            
-            do {
-                if apiRequest.successCode == statusCode {
-                    if let responseData = data {
-                        let responseObject: Response = try parse(responseData)
-                        completion(.success(responseObject))
-                    } else {
-                        completion(.failure(APIServiceError.invalidHTTPURLResponse))
-                    }
-                } else {
-                    if let responseData = data {
-                        let errorObject: CustomError = try parse(responseData)
-                        completion(.failure(errorObject))
-                    } else {
-                        completion(.failure(APIServiceError.invalidHTTPURLResponse))
-                    }
-                }
-            } catch (let error) {
-                completion(.failure(error))
-            }
-        })
-    }
-}
-
-extension APIServiceProtocol {
-    func parse<T: Decodable>(_ data: Data, jsonDecoder: JSONDecoder = JSONDecoder()) throws -> T  {
-        if T.self is String.Type {
-            if let parsed = String(data: data, encoding: .utf8) as? T {
-                return parsed
-            } else {
-                throw APIServiceError.couldNotParseToSpecifiedModel
-            }
-        }
-        return try jsonDecoder.decode(T.self, from: data)
     }
 }
 
@@ -132,7 +114,7 @@ public extension Result where Success == APIServiceSuccessType {
         guard let successValue = try? self.get(), statusCode == successValue.statusCode, let data = successValue.data else {
             return nil
         }
-        if T.self is String.Type, let parsed = String(data: successValue.data!, encoding: .utf8) as? T {
+        if T.self is String.Type, let parsed = String(data: data, encoding: .utf8) as? T {
             return parsed
         }
         if let parsed = try? jsonDecoder.decode(T.self, from: data) {
