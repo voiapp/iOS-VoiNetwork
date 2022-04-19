@@ -48,8 +48,8 @@ public extension APIRequest {
     var successCode: HTTPStatusCode { return .ok }
 
     var urlRequest: URLRequest? {
+        if baseURLPath.isEmpty && path.isEmpty { return nil }
         guard var urlComponents = URLComponents(string: baseURLPath + path) else { return nil }
-        
         if urlComponents.queryItems == nil || urlComponents.queryItems?.isEmpty == true {
             urlComponents.queryItems = queryParameters?.map { URLQueryItem(name: $0, value: $1) }
         } else if let queryParams = queryParameters, var queryItems = urlComponents.queryItems {

@@ -15,9 +15,9 @@ protocol APIExampleServiceProtocol: APIServiceProtocol {
     func requestWithStringResponse(completion: @escaping (Result<String, Error>) -> Void)
 }
 
-struct APIExampleService: APIExampleServiceProtocol {    
+struct APIExampleService: APIExampleServiceProtocol {
     var dispatcher: APIRequestDispatcherProtocol
-    
+
     func requestWithoutErrorHandling(completion: @escaping (Result<ExampleSuccess, Error>) -> Void) {
         let request = APIExampleRequest.exampleRequest
         performRequest(request) { result in
@@ -27,7 +27,9 @@ struct APIExampleService: APIExampleServiceProtocol {
     
     func requestWithErrorHandling(completion: @escaping (Result<ExampleSuccess, Error>) -> Void) {
         let request = APIExampleRequest.exampleRequest
-        performRequest(request, ExampleError.self, completion)
+        performRequest(request) { result in
+            result.parseToType(ExampleSuccess.self, statusCode: .badRequest, completion: completion)
+        }
     }
     
     func requestWithStringResponse(completion: @escaping (Result<String, Error>) -> Void) {

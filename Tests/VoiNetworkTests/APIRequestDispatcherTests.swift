@@ -19,7 +19,7 @@ class APIRequestDispatcherTests: XCTestCase {
             XCTAssertTrue(headerProvider.headersWasCalled)
             expectation.fulfill()
         }
-        wait(for: [expectation], timeout: 3.0)
+        wait(for: [expectation], timeout: 1)
     }
 }
 

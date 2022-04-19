@@ -51,10 +51,7 @@ enum MockRequest: APIRequest {
     case requestUsingPATCH
     
     var baseURLPath: String {
-        switch self {
-        case .requestPathWithoutQueryparameters, .requestPathWithoutQueryparametersButHasPropertyQueryParameters: return "https://example.com"
-        case .requestPathWithQueryparameters, .requestUsingPATCH: return ""
-        }
+        "https://example.com"
     }
     
     var path: String {
