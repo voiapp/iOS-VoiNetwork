@@ -18,6 +18,7 @@ public protocol DeviceHeaderProvider {
 
 public protocol APIRequestDispatcherProtocol {
     var deviceHeaderProvider: DeviceHeaderProvider { get }
+    func execute(apiRequest: APIRequest) async throws -> (Data?, URLResponse?)
     func execute(apiRequest: APIRequest, completion: @escaping (Data?, URLResponse?, Error?) -> Void)
 }
 
@@ -35,5 +36,21 @@ public final class APIRequestDispatcher: APIRequestDispatcherProtocol {
         }
         request.allHTTPHeaderFields?.merge(deviceHeaderProvider.deviceHeaders, uniquingKeysWith: { (left, right) in left })
         URLSession.shared.dataTask(with: request, completionHandler: completion).resume()
+    }
+
+    public func execute(apiRequest: APIRequest) async throws -> (Data?, URLResponse?) {
+        guard var request = apiRequest.urlRequest else {
+            throw APIRequestError.requestMissing
+        }
+        request.allHTTPHeaderFields?.merge(deviceHeaderProvider.deviceHeaders, uniquingKeysWith: { (left, right) in left })
+        return try await withCheckedThrowingContinuation { continuation in
+            URLSession.shared.dataTask(with: request) { (data, response, error) in
+                if let error = error {
+                    continuation.resume(throwing: error)
+                    return
+                }
+                continuation.resume(returning: (data, response))
+            }.resume()
+        }
     }
 }
