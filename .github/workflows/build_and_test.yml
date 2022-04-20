@@ -28,4 +28,4 @@ jobs:
 
       - name: Run tests
         run: |
-          xcodebuild -scheme "VoiNetwork" -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 13 Pro,OS=15.2' test
+          xcodebuild -scheme "VoiNetwork" -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 13 Pro,OS=15.2' clean test
