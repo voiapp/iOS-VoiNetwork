@@ -10,11 +10,18 @@ import XCTest
 import VoiNetwork
 
 enum APIExampleRequest: APIRequest {
+    case emptyRequest
     case exampleRequest
     case exampleRequestWithEncodableBody(body: ExampleBody)
     case exampleRequestWithDictionaryBody(body: [String: Any])
     
-    var baseURLPath: String { "" }
+    var baseURLPath: String {
+        switch self {
+        case .emptyRequest: return ""
+        default:
+            return "https://example.com"
+        }
+    }
     var path: String { "" }
     var method: HTTPMethod { HTTPMethod.get }
     var requestHeaders: [String : String]? {
@@ -23,7 +30,7 @@ enum APIExampleRequest: APIRequest {
     
     var body: HTTPBody? {
         switch self {
-        case .exampleRequest: return nil
+        case .exampleRequest, .emptyRequest: return nil
         case .exampleRequestWithEncodableBody(let encodable): return .jsonFromEncodable(body: encodable)
         case .exampleRequestWithDictionaryBody(let dictionary): return .jsonFromDictionary(dictionary: dictionary)
         }

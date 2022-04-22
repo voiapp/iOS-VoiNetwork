@@ -17,89 +17,28 @@ class APIExampleServiceTests_WithErrorHandling: XCTestCase {
         super.setUp()
         self.service = APIExampleService(dispatcher: dispatcher)
     }
-    
-    func testExampleRequestWithErrorHandling_ParseBasicModel_Successful() {
+
+    func testExampleRequestWithOutErrorHandling_ParseError_Success() {
         let expectation = XCTestExpectation()
-        dispatcher.data = responseModel_valid.data(using: .utf8)
-        service.requestWithErrorHandling { result in
-            switch result {
-            case .failure: XCTFail()
-            case .success(let model):
-                XCTAssertEqual(model.name, "Example Name")
-                XCTAssertEqual(model.value, 42)
-            }
-            expectation.fulfill()
-        }
-        wait(for: [expectation], timeout: 1)
-    }
-    
-    func testExampleRequestWithErrorHandling_ParseBasicModel_Fail() {
-        let expectation = XCTestExpectation()
-        dispatcher.data = responseModel_inValid.data(using: .utf8)
-        service.requestWithErrorHandling { result in
-            if case .failure(let error) = result, let decodingEror = error as? DecodingError {
-                switch decodingEror {
-                case .keyNotFound(let key, _):
-                    XCTAssertEqual(key.stringValue, "name")
-                default:
-                    XCTFail()
-                }
+        service.requestWithoutErrorHandling { result in
+            if case .failure(let error) = result  {
+                XCTAssertNotNil(error)
+                XCTAssertEqual(self.dispatcher.numberOfTimesExecuteIsCalled, 1)
+                XCTAssertNil(self.dispatcher.data)
             } else {
                 XCTFail()
             }
             expectation.fulfill()
         }
-        wait(for: [expectation], timeout: 1)
+        wait(for: [expectation], timeout:  1)
     }
     
-    func testExampleRequestWithErrorHandling_ParseError_Success() {
-        let expectation = XCTestExpectation()
-        dispatcher.data = responseError_valid.data(using: .utf8)
-        dispatcher.statusCode = 400
-        service.requestWithErrorHandling { result in
-            if case .failure(let error) = result, let responseError = error as? ExampleError {
-                XCTAssertEqual(responseError.errorMessage, "The requested value could not be found")
-                XCTAssertEqual(responseError.errorCode, 420)
-            } else {
-                XCTFail()
-            }
-            expectation.fulfill()
-        }
-        wait(for: [expectation], timeout: 1)
-    }
-    
-    func testExampleRequestWithErrorHandling_ParseError_Fail() {
-        let expectation = XCTestExpectation()
-        dispatcher.data = responseError_inValid.data(using: .utf8)
-        dispatcher.statusCode = 400
-        service.requestWithErrorHandling { result in
-            if case .failure(let error) = result, let decodingEror = error as? DecodingError {
-                switch decodingEror {
-                case .keyNotFound(let key, _):
-                    XCTAssertEqual(key.stringValue, "errorMessage")
-                default:
-                    XCTFail()
-                }
-            } else {
-                XCTFail()
-            }
-            expectation.fulfill()
-        }
-        wait(for: [expectation], timeout: 1)
-    }
     
     func testExampleRequestWithErrorHandling_CheckStatusCode_Fail() {
         let expectation = XCTestExpectation()
-        dispatcher.data = responseError_inValid.data(using: .utf8)
-        dispatcher.statusCode = 204
         service.requestWithErrorHandling { result in
-            if case .failure(let error) = result, let decodingEror = error as? DecodingError {
-                switch decodingEror {
-                case .keyNotFound(let key, _):
-                    XCTAssertEqual(key.stringValue, "errorMessage")
-                default:
-                    XCTFail()
-                }
+            if case .failure(let error) = result, let error = error as? APIServiceError {
+                XCTAssertEqual(error, .statusCodeNotHandled)
             } else {
                 XCTFail()
             }
@@ -107,33 +46,29 @@ class APIExampleServiceTests_WithErrorHandling: XCTestCase {
         }
         wait(for: [expectation], timeout: 1)
     }
-    
-    let responseModel_valid = """
-                                {
-                                    "name": "Example Name",
-                                    "value": 42
-                                }
-                              """
-    
-    let responseModel_inValid = """
-                                {
-                                    "first_name": "Example Name",
-                                    "value": 42
-                                }
-                                """
-    
-    
-    let responseError_valid = """
-                                {
-                                    "errorMessage": "The requested value could not be found",
-                                    "errorCode": 420
-                                }
-                              """
-    
-    let responseError_inValid = """
-                                {
-                                    "error_message": "I'm not correct",
-                                    "errorCode": 420
-                                }
-                                """
+
+    // MARK: Async methods
+
+    func testExampleRequest_AsyncWithModelResponse_Succeeds() async {
+        let request = APIExampleRequest.exampleRequest
+        do {
+            let response = try await dispatcher.execute(apiRequest: request)
+            XCTAssertTrue(dispatcher.numberOfTimesExecuteIsCalled == 1)
+            XCTAssertNotNil(response)
+        } catch {
+            XCTFail()
+        }
+    }
+
+    func testExampleRequest_AsyncWithErrorResponse_Succeeds() async {
+        let request = APIExampleRequest.exampleRequest
+        do {
+           _ = try await dispatcher.execute(apiRequest: request)
+        } catch let error as APIRequestError {
+            XCTAssertEqual(error, .requestMissing)
+        } catch {
+            XCTFail()
+        }
+    }
+
 }
