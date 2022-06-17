@@ -26,7 +26,46 @@ public protocol APIServiceProtocol {
 public extension APIServiceProtocol {
     func performRequest(_ apiRequest: APIRequest, _ completion: @escaping (Result<APIServiceSuccessType, Error>) -> Void) {
         NetworkActivity.start()
-        self.dispatcher.execute(apiRequest: apiRequest, completion: {(data, response, error) in
+        
+        func logRequest(_ request: URLRequest) {
+            let header = request.allHTTPHeaderFields.map { "\($0)" } ?? "null"
+            let body = request.httpBody.map { String(data: $0, encoding: .utf8) ?? "null" } ?? "null"
+            print("""
+            [NETWORKING] 📤 Request has been sent: \(request.httpMethod ?? "null") \(request.url?.absoluteString ?? "null")
+            HEADER: \(header)
+            BODY:
+            \(body)
+            """)
+        }
+        
+        func logResponse(request: URLRequest, data: Data?, response: URLResponse?, error: Error?) {
+            let dataString: String
+            if let data = data {
+                if let json = try? JSONSerialization.jsonObject(with: data, options: .mutableContainers),
+                   let jsonData = try? JSONSerialization.data(withJSONObject: json, options: .prettyPrinted) {
+                    dataString = String(decoding: jsonData, as: UTF8.self)
+                } else {
+                    dataString = " ❌ Corrupted Json Data"
+                }
+            } else {
+                dataString = "null"
+            }
+            
+            let statusCode = (response as? HTTPURLResponse).map { "\($0.statusCode)" } ?? "null"
+            
+            print("""
+            [NETWORKING] 📥 Response has been received: \(request.httpMethod ?? "null") \(request.url?.absoluteString ?? "null")
+            STATUS CODE: \(statusCode)
+            JSON:
+            \(dataString)
+            """)
+        }
+        
+        if let request = apiRequest.urlRequest {
+            logRequest(request)
+        }
+        
+        self.dispatcher.execute(apiRequest: apiRequest, completion: {  (data, response, error) in
             NetworkActivity.stop()
             if let error = error {
                 completion(.failure(error))
@@ -37,6 +76,11 @@ public extension APIServiceProtocol {
                 completion(.failure(APIServiceError.invalidHTTPURLResponse))
                 return
             }
+            
+            if let request = apiRequest.urlRequest {
+                logResponse(request: request, data: data, response: response, error: error)
+            }
+                        
             completion(.success((statusCode, data)))
         })
     }
