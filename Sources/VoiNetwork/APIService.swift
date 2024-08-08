@@ -52,6 +52,20 @@ public extension APIServiceResponse {
         }
         return try jsonDecoder.decode(T.self, from: data)
     }
+
+    func parse<SuccessType: Decodable, ErrorType: Decodable & Error>(success: (type: SuccessType.Type, statusCode: HTTPStatusCode),
+                                       error: (type: ErrorType.Type, statusCode: HTTPStatusCode),
+                                                                     jsonDecoder: JSONDecoder = JSONDecoder()) throws -> SuccessType {
+
+        if statusCode == success.statusCode {
+            return try parse()
+        } else if statusCode == error.statusCode {
+            let error: ErrorType = try parse()
+            throw error
+        } else {
+            throw APIServiceError.statusCodeNotHandled
+        }
+    }
 }
 
 //Mark: Code below is from old API with completion handlers
